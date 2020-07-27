@@ -9,6 +9,8 @@ export interface RemoterProxy<F> {
 
     /**
      * 路由到serverId服务器，并返回rpc函数
+     * notify： 只发送消息，不接收返回，节省一次通信。
+     *  (notify只有tcp的rpc协议支持.其它协议不要使用 notify)
      */
     to(serverId: string, notify?: boolean): F;
 
@@ -24,6 +26,8 @@ export interface RemoterProxy<F> {
 export interface RemoterProxyWithRoute<ROUTE, F> extends RemoterProxy<F> {
     /**
      * 路由到routeParam，并返回rpc调用函数
+     * notify： 只发送消息，不接收返回，节省一次通信。
+     * (notify只有tcp的rpc协议支持.其它rpc协议不要使用 notify)
      */
     route(routeParam: ROUTE, notify?: boolean): F;
 

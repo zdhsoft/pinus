@@ -1,7 +1,7 @@
 import * as should from 'should';
 // import { describe, it } from "mocha-typescript"
-let pinus = require('../../lib/index');
-let ChannelService = require('../../lib/common/service/channelService');
+let pinus = require('../../lib/index').pinus;
+let ChannelService = require('../../lib/common/service/channelService').ChannelService;
 
 let mockBase = process.cwd() + '/test';
 let channelName = 'test_channel';
@@ -96,7 +96,7 @@ describe('channel test', function () {
       members.length.should.equal(uinfos.length);
       for (i = 0, l = uinfos.length; i < l; i++) {
         item = uinfos[i];
-        members.should.include(item.uid);
+        members.should.containEql(item.uid);
       }
     });
   });

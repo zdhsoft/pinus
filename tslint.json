@@ -1,7 +1,15 @@
 {
   "exclude": [
-    "**/dist/**"
+    "**/dist/**",
+    "**/node_modules/**"
   ],
+  "cliOptions": {
+    "exclude": [
+      "bin",
+      "build",
+      "node_modules"
+    ]
+  },
   "rules": {
     "jsdoc-format": false,
     "class-name": true,
@@ -27,10 +35,6 @@
     "quotemark": [
       true,
       "single"
-    ],
-    "semicolon": [
-      true,
-      "always"
     ],
     "triple-equals": [
       true,

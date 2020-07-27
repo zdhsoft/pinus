@@ -11,21 +11,22 @@ import { RESERVED, ServerInfo } from '../util/constants';
 import { LoaderPathType } from 'pinus-loader';
 
 export interface DictionaryComponentOptions {
-    dict ?: string;
+    dict?: string;
 }
 
 function canResolve(path: string) {
     try {
         require.resolve(path);
-    } catch(err) {
+    } catch (err) {
         return false;
     }
     return true;
 }
+
 export class DictionaryComponent implements IComponent {
     app: Application;
-    dict: {[key: string]: number} = {};
-    abbrs: {[key: string]: string} = {};
+    dict: { [key: string]: number } = {};
+    abbrs: { [key: string]: string } = {};
     userDicPath: string;
     version = '';
     name = '__dictionary__';
@@ -43,38 +44,25 @@ export class DictionaryComponent implements IComponent {
         }
     }
 
-    afterStartAll() {
-        let servers = this.app.serverTypeMaps;
-        let routes = [];
 
-        let handlerPathss: {[serverType: string]: string[]} = {};
+    start(cb: () => void) {
+        let servers = this.app.get('servers');
+        let routes = [];
 
         // Load all the handler files
         for (let serverType in servers) {
-            let slist = servers[serverType];
-            let server: ServerInfo;
-            handlerPathss[serverType] = [];
-            for(server of slist) {
-                handlerPathss[serverType] = handlerPathss[serverType].concat(server.handlerPaths);
-            }
-        }
-
-        // Load all the handler files
-        for (let serverType in handlerPathss) {
-            let paths = handlerPathss[serverType];
-            if (!paths) {
+            let p = pathUtil.getHandlerPath(this.app.getBase(), serverType);
+            if (!p) {
                 continue;
             }
-            for (let p of paths) {
-                let handlers = Loader.load(p, this.app, false, false, LoaderPathType.PINUS_HANDLER);
+            let handlers = Loader.load(p, this.app, false, false, LoaderPathType.PINUS_HANDLER);
 
-                for (let name in handlers) {
-                    let handler = handlers[name];
+            for (let name in handlers) {
+                let handler = handlers[name];
 
-                    let proto = listEs6ClassMethods(handler);
-                    for (let key of proto) {
-                        routes.push(serverType + '.' + name + '.' + key);
-                    }
+                let proto = listEs6ClassMethods(handler);
+                for (let key of proto) {
+                    routes.push(serverType + '.' + name + '.' + key);
                 }
             }
         }
@@ -107,7 +95,7 @@ export class DictionaryComponent implements IComponent {
         }
 
         this.version = crypto.createHash('md5').update(JSON.stringify(this.dict)).digest('base64');
-
+        process.nextTick(cb);
     }
 
     getDict() {

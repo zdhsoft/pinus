@@ -34,6 +34,7 @@ export interface ConnectorComponentOptions {
     blacklistFun?: BlackListFunction;
     useDict?: boolean;
     useProtobuf?: boolean;
+    forwardMsg?: boolean; // if forwardMsg === false, connector will only accept request to local handler.
 }
 
 
@@ -60,6 +61,7 @@ export class ConnectorComponent implements IComponent {
     useAsyncCoder: boolean;
     blacklistFun: BlackListFunction;
     connection: ConnectionService;
+    forwardMsg?: boolean;
 
     keys: { [id: number]: RsaKey } = {};
     blacklist: string[] = [];
@@ -76,6 +78,7 @@ export class ConnectorComponent implements IComponent {
         this.useHostFilter = opts.useHostFilter;
         this.useAsyncCoder = opts.useAsyncCoder;
         this.blacklistFun = opts.blacklistFun;
+        this.forwardMsg = opts.forwardMsg;
 
         if (opts.useDict) {
             app.load(pinus.components.dictionary, app.get('dictionaryConfig'));
@@ -300,6 +303,12 @@ export class ConnectorComponent implements IComponent {
                 dmsg = this.decode(msg);
             } else if (this.connector.decode) {
                 dmsg = this.connector.decode(msg);
+                // Perhaps protobuf decoder error can be captured here.
+                // if (dmsg && dmsg.body === null) {
+                //     // protobuf decode error
+                //     logger.error('fail to decode the msg body received from client. msg:', dmsg);
+                //     return;
+                // }
             }
             if (!dmsg) {
                 // discard invalid message
@@ -418,6 +427,13 @@ export class ConnectorComponent implements IComponent {
         let type = this.checkServerType(msg.route);
         if (!type) {
             logger.error('invalid route string. route : %j', msg.route);
+            return;
+        }
+        // only stop forwarding message when forwardMsg === false;
+        if (this.forwardMsg === false && type !== this.app.getServerType()) {
+            logger.warn('illegal route. forwardMsg=false route=', msg.route, 'sessionid=', session.id);
+            // kick client requests for illegal route request.
+            this.session.kickBySessionId(session.id);
             return;
         }
         this.server.globalHandle(msg, session.toFrontendSession(), (err, resp) => {
